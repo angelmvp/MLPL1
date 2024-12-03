@@ -1,0 +1,5 @@
+5.1_3.5_1.4_0.2_Iris-setosa
+4.9_3.0_1.4_0.2_Iris-setosa
+4.7_3.1_1.3_0.2_Iris-setosa
+4.6_3.1_1.5_0.2_Iris-setosa
+5.0_3.6_1.4_0.2_Iris-setosa
