@@ -30,9 +30,18 @@ def aplicar_separador():
     except Exception as e:
         messagebox.showerror("Error", "Error al leer el archivo")
 
-# Función para obtener los tipos de atributos
+
 def obtener_tipos_atributos(df):
     return {col: "Cuantitativo" if pd.api.types.is_numeric_dtype(df[col]) else "Cualitativo" for col in df.columns}
+
+def obtener_valores_cualitativos(df):
+    valores_cualitativos = {}
+
+    columnas_cualitativas = df.select_dtypes(exclude="number").columns
+    for col in columnas_cualitativas:
+        # Guardar los valores únicos de la columna en el diccionario
+        valores_cualitativos[col] = df[col].unique()  
+    return valores_cualitativos
 
 # Función para obtener estadísticas de atributos cuantitativos
 def obtenerMin(columna):
@@ -57,14 +66,19 @@ def obtenerMean(columna):
         contador += 1
     return suma / contador if contador > 0 else 0
 def obtener_estadisticas(df):
-    return {
-        col: {
-            "Min": obtenerMin(df[col]),
-            "Max": obtenerMax(df[col]),
-            "Mean": obtenerMean(df[col]),
+    estadisticas = {}
+    columnas_numericas = df.select_dtypes(include="number").columns
+    
+    for col in columnas_numericas:
+        min_val = obtenerMin(df[col])
+        max_val = obtenerMax(df[col])
+        mean_val = obtenerMean(df[col])
+        estadisticas[col] = {
+            "Min": min_val,
+            "Max": max_val,
+            "Mean": mean_val,
         }
-        for col in df.select_dtypes(include="number").columns
-    }
+    return estadisticas
 def poner_headers(df):
     headers = []
     for i in range(len(df.columns)):
@@ -79,38 +93,27 @@ def actualizar_informacion(df):
 
     # Cantidad de atributos
     ttk.Label(frame_data, text=f"Cantidad de Atributos: {len(df.columns)}").pack()
-
     # Cantidad de patrones
-    ttk.Label(frame_data, text=f"Cantidad de Patrones: {len(df)}").pack()
-
-    # Tipos de atributos
-    # tipos_atributos = obtener_tipos_atributos(df)
-    # ttk.Label(frame_data, text="Tipos de Atributos:").pack()
-    # for col, tipo in tipos_atributos.items():
-    #     ttk.Label(frame_data, text=f"  {col}: {tipo}").pack( padx=20)
+    ttk.Label(frame_data, text=f"Cantidad de Patrones: {len(df)+1}").pack()
 
     # Estadísticas de atributos cuantitativos
     estadisticas = obtener_estadisticas(df)
     if estadisticas:
         ttk.Label(frame_data, text="Estadísticas de Atributos Cuantitativos:").pack(anchor="w")
         for col, stats in estadisticas.items():
-            ttk.Label(frame_data, text=f"  {col} : Estadisticas: {stats}").pack(anchor="w", padx=20)
-            # for stat, value in stats.items():
-            #     ttk.Label(frame_data, text=f"    {stat}: {value:.2f}").pack(anchor="w", padx=40)
+            ttk.Label(frame_data, text=f"  {col} : Estadisticas: {stats}").pack(anchor="w")
 
-    # Valores únicos de atributos cualitativos
+    # Valores de atributos cualitativos
     valores_cualitativos = obtener_valores_cualitativos(df)
     if valores_cualitativos:
         ttk.Label(frame_data, text="Valores Únicos de Atributos Cualitativos:").pack(anchor="w")
         for col, valores in valores_cualitativos.items():
-            ttk.Label(frame_data, text=f"  {col}: {', '.join(map(str, valores[:5]))}...").pack(anchor="w", padx=20)
+            ttk.Label(frame_data, text=f"  {col}: {', '.join(map(str, valores[:]))}").pack(anchor="w", padx=20)
 
-# Función para obtener los valores únicos de atributos cualitativos
-def obtener_valores_cualitativos(df):
-    return {col: df[col].unique() for col in df.select_dtypes(exclude="number").columns}
+
 
 ventana = tk.Tk()
-ventana.title("Lector de Archivos con Tkinter")
+ventana.title("Practica 1 ML UyGame")
 ventana.geometry("800x450")
 
 style = ttk.Style()
