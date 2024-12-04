@@ -6,86 +6,126 @@ import pandas as pd
 def cargar_archivo():
     global archivo
     archivo = filedialog.askopenfilename(
-        title="Seleccionar archivo de texto"
+        title="Seleccionar archivo de texto",
     )
     if archivo:
-        label_archivo.config(text="Archivo cargado")
+        label_archivo.config(text="Se ha cargado el archivo")
     else:
-        label_archivo.config(text="No se ha cargado ningun archivo")
+        label_archivo.config(text="No se ha cargado ningún archivo")
 
-# Función para aplicar el separador y leer con pandas
+# Función para aplicar el separador y leer el archivo
 def aplicar_separador():
     separador = textBox_separador.get()
     if not separador:
-        messagebox.showwarning("Error","Se debe de ingresar un separador.")
+        messagebox.showwarning("Error", "Se debe ingresar un separador.")
         return
     if not archivo:
-        messagebox.showwarning("Error","Se debe decargar un archivo primero.")
+        messagebox.showwarning("Error", "Se debe cargar un archivo primero.")
         return
     try:
-        data = pd.read_csv(archivo, sep=separador)
-        actualizar_informacion(data)
-        messagebox.showinfo("Éxito", "archivo correctamente leido")
+        global dataframe
+        dataframe = pd.read_csv(archivo, sep=separador)
+        actualizar_informacion(dataframe)
+        messagebox.showinfo("Éxito", "Archivo correctamente leído")
     except Exception as e:
-        messagebox.showerror("Error", "error al leer el archivo")
+        messagebox.showerror("Error", "Error al leer el archivo")
 
-def obtener_cantidad_atributos(data):
-    return data.shape[1]
+# Función para obtener los tipos de atributos
+def obtener_tipos_atributos(df):
+    return {col: "Cuantitativo" if pd.api.types.is_numeric_dtype(df[col]) else "Cualitativo" for col in df.columns}
 
-# Función para obtener y mostrar la cantidad de patrones
-def obtener_cantidad_patrones(data):
-    return data.shape[0] + 1
+# Función para obtener estadísticas de atributos cuantitativos
+def obtenerMin(columna):
+    minimo = columna.iloc[0]  
+    for valor in columna:
+        if valor < minimo:
+            minimo = valor
+    return minimo
 
-# Función para mostrar una vista previa de la matriz (primeros 5 registros)
-def cargar_matriz(data):
-    return data.head().to_string(index=False)
+def obtenerMax(columna):
+    maximo = columna.iloc[0]  
+    for valor in columna:
+        if valor > maximo:
+            maximo = valor
+    return maximo
 
-# Función para obtener información cuantitativa básica
-def obtener_info_cuantitativos(data):
-    return data.describe().to_string()
-
-def actualizar_informacion(data):
+def obtenerMean(columna):
+    suma = 0
+    contador = 0
+    for valor in columna:
+        suma += valor
+        contador += 1
+    return suma / contador if contador > 0 else 0
+def obtener_estadisticas(df):
+    return {
+        col: {
+            "Min": obtenerMin(df[col]),
+            "Max": obtenerMax(df[col]),
+            "Mean": obtenerMean(df[col]),
+        }
+        for col in df.select_dtypes(include="number").columns
+    }
+def poner_headers(df):
+    headers = []
+    for i in range(len(df.columns)):
+        headers.append(f"Atributo {i}")
+    df.columns = headers
+# Función para actualizar la información en el frame_data
+def actualizar_informacion(df):
+    poner_headers(df)
+    print(df.columns)
     for widget in frame_data.winfo_children():
         widget.destroy()
 
     # Cantidad de atributos
-    atributos = obtener_cantidad_atributos(data)
-    label_atributos = ttk.Label(frame_data, text=f"Cantidad de Atributos: {atributos}")
-    label_atributos.pack()
+    ttk.Label(frame_data, text=f"Cantidad de Atributos: {len(df.columns)}").pack()
 
     # Cantidad de patrones
-    patrones = obtener_cantidad_patrones(data)
-    label_patrones = ttk.Label(frame_data, text=f"Cantidad de Patrones: {patrones}")
-    label_patrones.pack()
+    ttk.Label(frame_data, text=f"Cantidad de Patrones: {len(df)}").pack()
 
-    # Matriz de datos
-    matriz = cargar_matriz(data)
-    label_matriz = ttk.Label(frame_data, text=f"Matriz de Datos:\n{matriz}", justify="left")
-    label_matriz.pack(anchor="w")
+    # Tipos de atributos
+    # tipos_atributos = obtener_tipos_atributos(df)
+    # ttk.Label(frame_data, text="Tipos de Atributos:").pack()
+    # for col, tipo in tipos_atributos.items():
+    #     ttk.Label(frame_data, text=f"  {col}: {tipo}").pack( padx=20)
 
-    # Información cuantitativa
-    info_cuantitativa = obtener_info_cuantitativos(data)
-    label_info_cuantitativa = ttk.Label(frame_data, text=f"Información Cuantitativa:\n{info_cuantitativa}", justify="left")
-    label_info_cuantitativa.pack(anchor="w")
+    # Estadísticas de atributos cuantitativos
+    estadisticas = obtener_estadisticas(df)
+    if estadisticas:
+        ttk.Label(frame_data, text="Estadísticas de Atributos Cuantitativos:").pack(anchor="w")
+        for col, stats in estadisticas.items():
+            ttk.Label(frame_data, text=f"  {col} : Estadisticas: {stats}").pack(anchor="w", padx=20)
+            # for stat, value in stats.items():
+            #     ttk.Label(frame_data, text=f"    {stat}: {value:.2f}").pack(anchor="w", padx=40)
+
+    # Valores únicos de atributos cualitativos
+    valores_cualitativos = obtener_valores_cualitativos(df)
+    if valores_cualitativos:
+        ttk.Label(frame_data, text="Valores Únicos de Atributos Cualitativos:").pack(anchor="w")
+        for col, valores in valores_cualitativos.items():
+            ttk.Label(frame_data, text=f"  {col}: {', '.join(map(str, valores[:5]))}...").pack(anchor="w", padx=20)
+
+# Función para obtener los valores únicos de atributos cualitativos
+def obtener_valores_cualitativos(df):
+    return {col: df[col].unique() for col in df.select_dtypes(exclude="number").columns}
 
 ventana = tk.Tk()
 ventana.title("Lector de Archivos con Tkinter")
 ventana.geometry("800x450")
 
 style = ttk.Style()
-style.theme_use("clam") 
-
-
+style.theme_use("clam")
 
 frame_info = ttk.Frame(ventana)
-frame_info.pack(pady=18, fill="x",padx=5)
-label_info= ttk.Label(frame_info,text="EQUIPO: UyGame\nPractica 1 ML")
-label_info.pack(fill="x",expand=False)
+frame_info.pack(pady=5, fill="x", padx=5)
+label_info = ttk.Label(frame_info, text="EQUIPO: UyGame\nPractica 1 ML")
+label_info.pack(fill="x", expand=False)
+
 frame_superior = ttk.Frame(ventana)
-frame_superior.pack(pady=20, fill="y", padx=20)
+frame_superior.pack(pady=10, fill="y", padx=20)
 
 button_cargar_archivo = ttk.Button(frame_superior, text="Cargar Archivo", command=cargar_archivo)
-button_cargar_archivo.pack(pady=10,padx=10)
+button_cargar_archivo.pack(pady=10, padx=10)
 
 label_archivo = ttk.Label(frame_superior, text="No se ha cargado ningún archivo", anchor="w")
 label_archivo.pack(side="top", fill="y", expand=True)
@@ -94,23 +134,20 @@ label_archivo.pack(side="top", fill="y", expand=True)
 frame_separador = ttk.Frame(ventana)
 frame_separador.pack(pady=20, padx=20, fill="y")
 
-ttk.Label(frame_separador, text="Separador:").pack( padx=5)
+ttk.Label(frame_separador, text="Separador:").pack(padx=5)
 textBox_separador = ttk.Entry(frame_separador, width=10)
-textBox_separador.pack(pady=10,padx=10)
+textBox_separador.pack(pady=5, padx=10)
 
 button_aplicar_separador = ttk.Button(frame_separador, text="Aplicar y Leer", command=aplicar_separador)
-button_aplicar_separador.pack(pady=10,padx=10)
-# style.configure("TButton", padding=6, relief="flat",
-#    background="#ABCDEF")
-style.configure("TLabel", padding=6, relief="flat",
-   background="#B9F09F")
+button_aplicar_separador.pack(pady=2, padx=10)
+
+style.configure("TLabel", padding=6, relief="flat", background="#B9F09F")
 
 archivo = None
+dataframe = None
 
-frame_data= ttk.Frame(ventana)
-frame_data.pack(pady=20,padx=20,fill="x")
+frame_data = ttk.Frame(ventana)
+frame_data.pack(pady=20, padx=20, fill="x")
 
-
-###Aqui va toda la data de las funciones que estan definidas
 # Ejecutar la ventana principal
 ventana.mainloop()
