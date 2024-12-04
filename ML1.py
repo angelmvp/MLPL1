@@ -6,65 +6,111 @@ import pandas as pd
 def cargar_archivo():
     global archivo
     archivo = filedialog.askopenfilename(
-        title="Seleccionar archivo"
+        title="Seleccionar archivo de texto"
     )
     if archivo:
-        lbl_archivo.config(text=f"Archivo cargado: {archivo.split('/')[-1]}")
+        label_archivo.config(text="Archivo cargado")
     else:
-        lbl_archivo.config(text="No se ha cargado ningun archivo")
+        label_archivo.config(text="No se ha cargado ningun archivo")
 
 # Función para aplicar el separador y leer con pandas
 def aplicar_separador():
-    separador = entry_separador.get()
+    separador = textBox_separador.get()
     if not separador:
-        messagebox.showwarning("Debes ingresar un separador.")
+        messagebox.showwarning("Error","Se debe de ingresar un separador.")
         return
     if not archivo:
-        messagebox.showwarning("Debes cargar un archivo primero.")
+        messagebox.showwarning("Error","Se debe decargar un archivo primero.")
         return
     try:
-        # Leer el archivo con pandas
-        df = pd.read_csv(archivo, sep=separador)
-        messagebox.showinfo("Éxito", f"Archivo leído con éxito con {len(df)} filas y {len(df.columns)} columnas.")
-        print(df.head())  # Muestra las primeras filas en la consola para prueba
+        data = pd.read_csv(archivo, sep=separador)
+        actualizar_informacion(data)
+        messagebox.showinfo("Éxito", "archivo correctamente leido")
     except Exception as e:
-        messagebox.showerror("Error", f"Error al leer el archivo: {e}")
+        messagebox.showerror("Error", "error al leer el archivo")
 
-# Configuración de la ventana principal
+def obtener_cantidad_atributos(data):
+    return data.shape[1]
+
+# Función para obtener y mostrar la cantidad de patrones
+def obtener_cantidad_patrones(data):
+    return data.shape[0] + 1
+
+# Función para mostrar una vista previa de la matriz (primeros 5 registros)
+def cargar_matriz(data):
+    return data.head().to_string(index=False)
+
+# Función para obtener información cuantitativa básica
+def obtener_info_cuantitativos(data):
+    return data.describe().to_string()
+
+def actualizar_informacion(data):
+    for widget in frame_data.winfo_children():
+        widget.destroy()
+
+    # Cantidad de atributos
+    atributos = obtener_cantidad_atributos(data)
+    label_atributos = ttk.Label(frame_data, text=f"Cantidad de Atributos: {atributos}")
+    label_atributos.pack()
+
+    # Cantidad de patrones
+    patrones = obtener_cantidad_patrones(data)
+    label_patrones = ttk.Label(frame_data, text=f"Cantidad de Patrones: {patrones}")
+    label_patrones.pack()
+
+    # Matriz de datos
+    matriz = cargar_matriz(data)
+    label_matriz = ttk.Label(frame_data, text=f"Matriz de Datos:\n{matriz}", justify="left")
+    label_matriz.pack(anchor="w")
+
+    # Información cuantitativa
+    info_cuantitativa = obtener_info_cuantitativos(data)
+    label_info_cuantitativa = ttk.Label(frame_data, text=f"Información Cuantitativa:\n{info_cuantitativa}", justify="left")
+    label_info_cuantitativa.pack(anchor="w")
+
 ventana = tk.Tk()
 ventana.title("Lector de Archivos con Tkinter")
-ventana.geometry("500x250")
+ventana.geometry("800x450")
 
-# Agregar un estilo moderno usando ttk
 style = ttk.Style()
-style.theme_use("clam")  # Cambiar el tema para diseño moderno
+style.theme_use("clam") 
 
-# Botón para cargar el archivo
+
+
+frame_info = ttk.Frame(ventana)
+frame_info.pack(pady=18, fill="x",padx=5)
+label_info= ttk.Label(frame_info,text="EQUIPO: UyGame\nPractica 1 ML")
+label_info.pack(fill="x",expand=False)
 frame_superior = ttk.Frame(ventana)
-frame_superior.pack(pady=10, fill="x", padx=20)
+frame_superior.pack(pady=20, fill="y", padx=20)
 
-btn_cargar = ttk.Button(frame_superior, text="Cargar Archivo", command=cargar_archivo)
-btn_cargar.pack(side="left", padx=10)
+button_cargar_archivo = ttk.Button(frame_superior, text="Cargar Archivo", command=cargar_archivo)
+button_cargar_archivo.pack(pady=10,padx=10)
 
-lbl_archivo = ttk.Label(frame_superior, text="No se ha cargado ningún archivo", anchor="w")
-lbl_archivo.pack(side="top", fill="x", expand=True)
+label_archivo = ttk.Label(frame_superior, text="No se ha cargado ningún archivo", anchor="w")
+label_archivo.pack(side="top", fill="y", expand=True)
 
 # Separador
 frame_separador = ttk.Frame(ventana)
-frame_separador.pack(pady=20, padx=20, fill="x")
+frame_separador.pack(pady=20, padx=20, fill="y")
 
-ttk.Label(frame_separador, text="Separador:").pack(side="left", padx=5)
-entry_separador = ttk.Entry(frame_separador, width=10)
-entry_separador.pack( padx=5)
+ttk.Label(frame_separador, text="Separador:").pack( padx=5)
+textBox_separador = ttk.Entry(frame_separador, width=10)
+textBox_separador.pack(pady=10,padx=10)
 
-btn_aplicar = ttk.Button(frame_separador, text="Aplicar y Leer", command=aplicar_separador)
-btn_aplicar.pack( padx=10)
-
-# Añadir un pie de página para estilo
-frame_footer = ttk.Frame(ventana)
-frame_footer.pack( fill="x", pady=10)
+button_aplicar_separador = ttk.Button(frame_separador, text="Aplicar y Leer", command=aplicar_separador)
+button_aplicar_separador.pack(pady=10,padx=10)
+# style.configure("TButton", padding=6, relief="flat",
+#    background="#ABCDEF")
+style.configure("TLabel", padding=6, relief="flat",
+   background="#B9F09F")
 
 archivo = None
 
+frame_data= ttk.Frame(ventana)
+frame_data.pack(pady=20,padx=20,fill="x")
+
+
+###Aqui va toda la data de las funciones que estan definidas
 # Ejecutar la ventana principal
 ventana.mainloop()
