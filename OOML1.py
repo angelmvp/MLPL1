@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
 
-class PracticaMLApp:
+class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Practica 1 ML UyGame")
@@ -118,7 +118,7 @@ class PracticaMLApp:
     def generar_vectores_horizontales(self):
         self._generar_vectores(orientacion="horizontal")
 
-    def _generar_vectores(self, orientacion):
+    def _generar_vectores(self, orientacion: str):
         seleccionados = []
         for col, var in self.checkboxes.items(): 
             if var.get():
@@ -195,5 +195,5 @@ class PracticaMLApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = PracticaMLApp(root)
+    app = App(root)
     root.mainloop()
