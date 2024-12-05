@@ -11,16 +11,16 @@ def cargar_archivo():
     if archivo:
         label_archivo.config(text="Se ha cargado el archivo")
     else:
-        label_archivo.config(text="No se ha cargado ningún archivo")
+        label_archivo.config(text="No se ha cargado nada")
 
 # Función para aplicar el separador y leer el archivo
 def aplicar_separador():
     separador = textBox_separador.get()
     if not separador:
-        messagebox.showwarning("Error", "Se debe ingresar un separador.")
+        messagebox.showwarning("Error", "Ingresa un separador.")
         return
     if not archivo:
-        messagebox.showwarning("Error", "Se debe cargar un archivo primero.")
+        messagebox.showwarning("Error", "Primero carga el archivo")
         return
     try:
         global dataframe
@@ -32,14 +32,35 @@ def aplicar_separador():
         messagebox.showerror("Error", "Error al leer el archivo")
 
 
-# Funciones adicionales para estadísticas y cualitativos
+def obtenerMin(columna):
+    minimo = columna.iloc[0]  
+    for valor in columna:
+        if valor < minimo:
+            minimo = valor
+    return minimo
+
+def obtenerMax(columna):
+    maximo = columna.iloc[0]  
+    for valor in columna:
+        if valor > maximo:
+            maximo = valor
+    return maximo
+
+def obtenerMean(columna):
+    suma = 0
+    contador = 0
+    for valor in columna:
+        suma += valor
+        contador += 1
+    return suma / contador if contador > 0 else 0
 def obtener_estadisticas(df):
     estadisticas = {}
     columnas_numericas = df.select_dtypes(include="number").columns
+    
     for col in columnas_numericas:
-        min_val = df[col].min()
-        max_val = df[col].max()
-        mean_val = df[col].mean()
+        min_val = obtenerMin(df[col])
+        max_val = obtenerMax(df[col])
+        mean_val = obtenerMean(df[col])
         estadisticas[col] = {
             "Min": min_val,
             "Max": max_val,
@@ -93,12 +114,15 @@ def mostrar_atributos(df):
         checkbox.pack(anchor="w")
         checkboxes[col] = var
 
-    button_generar_vectores = ttk.Button(frame_atributos, text="Generar Vectores", command=generar_vectores)
-    button_generar_vectores.pack(pady=10)
+    button_generar_vectores_columnas = ttk.Button(frame_atributos, text="Generar Vectores Verticales", command=generar_vectores_verticales)
+    button_generar_vectores_columnas.pack(pady=10)
+
+    button_generar_vectores_filas = ttk.Button(frame_atributos, text="Generar Vectores Horizontales", command=generar_vectores_horizontales)
+    button_generar_vectores_filas.pack(pady=10)
 
 
 
-def generar_vectores():
+def generar_vectores_verticales():
     seleccionados = []
     for col, var in checkboxes.items():
         if var.get(): 
@@ -120,6 +144,28 @@ def generar_vectores():
     text_widget.insert(tk.END, texto)
     text_widget.pack(expand=True)
 
+def generar_vectores_horizontales():
+    seleccionados = []
+    for col, var in checkboxes.items():
+        if var.get(): 
+            seleccionados.append(col) 
+    if not seleccionados:
+        messagebox.showwarning("Advertencia", "Seleccione minumo un atributo.")
+        return
+    #print(seleccionados)
+    ventana_vectores = tk.Toplevel(ventana)
+    ventana_vectores.title("Generación de Vectores horizontales")
+    ventana_vectores.geometry("500x300")
+
+    ttk.Label(ventana_vectores, text="Atributos Seleccionados:").pack(pady=10)
+    dataframe_seleccionado = dataframe[seleccionados]
+    print(dataframe_seleccionado)
+    texto = dataframe_seleccionado.T.to_string(index=True, header=True)
+    print(texto)
+    text_widget = tk.Text(ventana_vectores, width=80, height=20)
+    text_widget.insert(tk.END, texto)
+    text_widget.pack(expand=True)
+    
 ventana = tk.Tk()
 ventana.title("Practica 1 ML UyGame")
 ventana.geometry("900x650")
