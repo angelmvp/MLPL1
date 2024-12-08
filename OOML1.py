@@ -214,8 +214,7 @@ class App:
             self.text_vectores = tk.Text(self.frame_data, width=80, height=10)
             self.text_vectores.insert(tk.END, self.texto)
             self.text_vectores.pack(pady=10, padx=10)
-
-            # Agregar el botón para obtener información de los vectores
+            
             self.button_info_vectores = ttk.Button(self.frame_data, text="Obtener Información de los Vectores",
                                                 command=self.obtener_info_vectores)
             self.button_info_vectores.pack(pady=10)
