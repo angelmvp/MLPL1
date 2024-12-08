@@ -15,7 +15,7 @@ class App:
         self.matriz_entrenamiento = None
         self.matriz_prueba = None
         self.text_vectores=None
-        self.boton_info_vectores=None
+        self.button_info_vectores=None
         self.vectores_generados=None
         self.set_styles()
         self.create_widgets()
@@ -38,8 +38,8 @@ class App:
         ##pa cargar los archivos
         self.frame_superior = ttk.Frame(self.frame_izquierda)
         self.frame_superior.pack(side="top", pady=2, padx=20)
-        button_cargar_archivo = ttk.Button(self.frame_superior, text="Cargar Archivo", command=self.cargar_archivo)
-        button_cargar_archivo.pack(pady=5, padx=10)
+        button_load_file = ttk.Button(self.frame_superior, text="Cargar Archivo", command=self.load_file)
+        button_load_file.pack(pady=5, padx=10)
         self.label_archivo = ttk.Label(self.frame_superior, text="No se ha cargado ningún archivo", anchor="w")
         self.label_archivo.pack(side="top", fill="y", expand=True)
 
@@ -49,8 +49,8 @@ class App:
         ttk.Label(self.frame_separador, text="Separador:").pack(padx=5)
         self.textBox_separador = ttk.Entry(self.frame_separador, width=10)
         self.textBox_separador.pack(pady=5, padx=10)
-        button_aplicar_separador = ttk.Button(self.frame_separador, text="Aplicar y Leer", command=self.aplicar_separador)
-        button_aplicar_separador.pack(pady=2, padx=10)
+        button_apply_separation = ttk.Button(self.frame_separador, text="Aplicar y Leer", command=self.apply_separation)
+        button_apply_separation.pack(pady=2, padx=10)
 
         # donde se mostraran los atributos
         self.frame_operaciones = ttk.Frame(self.frame_izquierda)
@@ -60,14 +60,14 @@ class App:
         self.frame_data = ttk.Frame(self.root)
         self.frame_data.pack(pady=5, padx=20, fill="x")
 
-    def cargar_archivo(self):
+    def load_file(self):
         self.archivo = filedialog.askopenfilename(title="Seleccionar archivo de texto")
         if self.archivo:
             self.label_archivo.config(text="Se ha cargado el archivo")
         else:
             self.label_archivo.config(text="No se ha cargado nada")
 
-    def aplicar_separador(self):
+    def apply_separation(self):
         separador = self.textBox_separador.get()
         if not separador:
             messagebox.showwarning("Error", "Ingresa un separador.")
@@ -77,22 +77,22 @@ class App:
             return
         try:
             self.dataframe = pd.read_csv(self.archivo, sep=separador, header=None)
-            self.poner_headers()
+            self.headers_por_default()
             self.mostrar_atributos()
-            self.actualizar_informacion(self.dataframe)
+            self.update_info(self.dataframe)
             
             messagebox.showinfo("Éxito", "Archivo leído correctamente")
         except Exception as e:
             messagebox.showerror("Error", "Error al realizar las operpaciones")
 
-    def actualizar_informacion(self,df):
+    def update_info(self,df):
         for widget in self.frame_data.winfo_children():
             widget.destroy()
 
         ttk.Label(self.frame_data, text=f"Cantidad de Atributos: {len(df.columns)}").pack()
         ttk.Label(self.frame_data, text=f"Cantidad de Patrones: {len(df)}").pack()
 
-        estadisticas = self.obtener_estadisticas(df)
+        estadisticas = self.get_stats(df)
         if estadisticas:
             ttk.Label(self.frame_data, text="Estadísticas de Atributos Cuantitativos:").pack(anchor="w")
             for col, stats in estadisticas.items():
@@ -106,8 +106,8 @@ class App:
         if self.vectores_generados is not None:
             if self.text_vectores:
                 self.text_vectores.destroy()
-            if self.boton_info_vectores:
-                self.boton_info_vectores.destroy()
+            if self.button_info_vectores:
+                self.button_info_vectores.destroy()
             self.text_vectores = tk.Text(self.frame_data, width=80, height=10)
             self.text_vectores.insert(tk.END, self.texto)
             self.text_vectores.pack(pady=10, padx=10)
@@ -165,18 +165,18 @@ class App:
             entry.pack(side="right", fill="x", expand=True, padx=10)
             entry_widgets.append(entry)
 
-        def aplicar_nombres():
+        def set_names():
             nuevos_nombres = [entry.get() for entry in entry_widgets]
             self.dataframe.columns = nuevos_nombres
             ventana_asignar_nombres.destroy()
             messagebox.showinfo("Éxito", "Nombres de atributos actualizados.")
             if self.vectores_generados is not None:
-                self.actualizar_informacion(self.vectores_generados)
+                self.update_info(self.vectores_generados)
             else:
-                self.actualizar_informacion(self.dataframe)
+                self.update_info(self.dataframe)
             self.mostrar_atributos()
 
-        ttk.Button(ventana_asignar_nombres, text="Aplicar Nombres", command=aplicar_nombres).pack(pady=20)
+        ttk.Button(ventana_asignar_nombres, text="Aplicar Nombres", command=set_names).pack(pady=20)
     def generar_vectores_verticales(self):
         self._generar_vectores(orientacion="vertical")
 
@@ -206,8 +206,8 @@ class App:
             # Mostrar los vectores generados en el mismo panel
             if self.text_vectores:
                 self.text_vectores.destroy()
-            if self.boton_info_vectores:
-                self.boton_info_vectores.destroy()
+            if self.button_info_vectores:
+                self.button_info_vectores.destroy()
 
             self.vectores_generados = self.df_filtrado[seleccionados]
 
@@ -216,18 +216,16 @@ class App:
             self.text_vectores.pack(pady=10, padx=10)
 
             # Agregar el botón para obtener información de los vectores
-            self.boton_info_vectores = ttk.Button(self.frame_data, text="Obtener Información de los Vectores",
+            self.button_info_vectores = ttk.Button(self.frame_data, text="Obtener Información de los Vectores",
                                                 command=self.obtener_info_vectores)
-            self.boton_info_vectores.pack(pady=10)
-
+            self.button_info_vectores.pack(pady=10)
         except ValueError:
             messagebox.showerror("Error", "Por favor, introduce valores válidos para inicio y cantidad.")
     def obtener_info_vectores(self):
         if self.vectores_generados is None:
             messagebox.showwarning("Advertencia", "No se han generado vectores.")
             return
-        # Actualizar la información mostrada en pantalla con los vectores generados
-        self.actualizar_informacion(self.vectores_generados)
+        self.update_info(self.vectores_generados)
     def obtenerMin(self,columna):
         minimo = columna.iloc[0]  
         for valor in columna:
@@ -241,7 +239,6 @@ class App:
             if valor > maximo:
                 maximo = valor
         return maximo
-
     def obtenerMean(self,columna):
         suma = 0
         contador = 0
@@ -249,20 +246,19 @@ class App:
             suma += valor
             contador += 1
         return suma / contador if contador > 0 else 0
-    def obtener_estadisticas(self,df):
-        estadisticas = {}
+    def get_stats(self,df):
+        stats = {}
         columnas_numericas = df.select_dtypes(include="number").columns
-        
         for col in columnas_numericas:
             min_val = self.obtenerMin(df[col])
             max_val = self.obtenerMax(df[col])
             mean_val = self.obtenerMean(df[col])
-            estadisticas[col] = {
+            stats[col] = {
                 "Min": min_val,
                 "Max": max_val,
                 "Mean": f"{mean_val:.4f}",
             }
-        return estadisticas
+        return stats
 
     def obtener_valores_cualitativos(self,df):
         valores_cualitativos = {}
@@ -272,18 +268,24 @@ class App:
 
             valores_cualitativos[col] = df[col].unique()
         return valores_cualitativos
-    def asignar_dataframe_a_matriz(self, opcion):
-        if opcion == 1:
-            self.matriz_entrenamiento =self.df_filtrado.copy()
-        elif opcion == 2:
-            self.matriz_prueba = self.df_filtrado.copy()
-        else:
-            messagebox.showerror("Error", "Matriz no válida.")
+    
 
-        messagebox.showinfo("Éxito", f"Vectores asignados.")
+    def asignar_dataframe_a_matriz(self, opcion):       
+        if self.df_filtrado is not None:
+            matriz_diccionario = self.df_filtrado.T.to_dict(orient="index")
+        else:
+            matriz_diccionario = self.dataframe.T.to_dict(orient="tight")
+        if opcion == 1:
+            self.matriz_entrenamiento = matriz_diccionario
+        elif opcion == 2:
+            self.matriz_prueba = matriz_diccionario
+
+        messagebox.showinfo("Éxito", "Vectores asignados.")
+        print("Matriz de entrenamiento:")
         print(self.matriz_entrenamiento)
+        print("Matriz de prueba:")
         print(self.matriz_prueba)
-    def poner_headers(self):
+    def headers_por_default(self):
         headers = [f"Atributo {chr(97 + i)}" for i in range(len(self.dataframe.columns))]
         self.dataframe.columns = headers
 
