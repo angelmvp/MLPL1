@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
-
+from Clasificador import Clasificador 
 class App:
     def __init__(self, root):
         self.root = root
@@ -12,8 +12,8 @@ class App:
         self.dataframe = None
         self.checkboxes = {}
         self.df_filtrado=None
-        self.matriz_entrenamiento = None
-        self.matriz_prueba = None
+        self.matriz_entrenamiento = []
+        self.matriz_prueba = []
         self.text_vectores=None
         self.button_info_vectores=None
         self.vectores_generados=None
@@ -123,7 +123,7 @@ class App:
             self.checkboxes[col] = var
 
         ttk.Button(self.frame_operaciones, text="Generar Vectores Verticales", command=self.generar_vectores_verticales).pack(pady=10)
-        ttk.Button(self.frame_operaciones, text="Generar Vectores Horizontales", command=self.generar_vectores_horizontales).pack(pady=10)
+        # ttk.Button(self.frame_operaciones, text="Generar Vectores Horizontales", command=self.generar_vectores_horizontales).pack(pady=10)
 
         ttk.Label(self.frame_operaciones, text="Inicio de Muestra:").pack(pady=2)
         self.entry_inicio_muestra = ttk.Entry(self.frame_operaciones, width=10)
@@ -137,12 +137,14 @@ class App:
         self.button_asignar_nombres.pack(pady=2)
         ##Boton s pa aplicar matrices entrenamiento
         ttk.Button(
-            self.frame_operaciones, text="Aplicar Vector a Matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
+            self.frame_operaciones, text="Añadir a Vector a Matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
         ).pack(pady=3)
     
         ttk.Button(
-            self.frame_operaciones, text="Aplicar Vector a Matriz de Prueba",  command=lambda: self.asignar_dataframe_a_matriz(2)
+            self.frame_operaciones, text="Añadir a Vector a Matriz de Prueba",  command=lambda: self.asignar_dataframe_a_matriz(2)
         ).pack(pady=3)
+        ttk.Button(
+            self.frame_operaciones,text="Clasificar pruebas",command=self.clasificar_pruebas).pack()
     def mostrar_panel_asignar_nombres(self):
         if self.dataframe is None:
             messagebox.showwarning("Error", "Primero carga y lee un archivo.")
@@ -180,8 +182,8 @@ class App:
     def generar_vectores_verticales(self):
         self._generar_vectores(orientacion="vertical")
 
-    def generar_vectores_horizontales(self):
-        self._generar_vectores(orientacion="horizontal")
+    # def generar_vectores_horizontales(self):
+    #     self._generar_vectores(orientacion="horizontal")
 
     def _generar_vectores(self, orientacion: str):
         try:
@@ -270,20 +272,27 @@ class App:
     
 
     def asignar_dataframe_a_matriz(self, opcion):       
-        if self.df_filtrado is not None:
-            matriz_diccionario = self.df_filtrado.T.to_dict(orient="index")
+        matriz_diccionario=None
+        if self.vectores_generados is not None:
+            matriz_diccionario = self.vectores_generados.T.to_dict(orient="index")
         else:
-            matriz_diccionario = self.dataframe.T.to_dict(orient="tight")
+            matriz_diccionario = self.dataframe.T.to_dict(orient="index")
         if opcion == 1:
-            self.matriz_entrenamiento = matriz_diccionario
+            self.matriz_entrenamiento.append(matriz_diccionario)
         elif opcion == 2:
-            self.matriz_prueba = matriz_diccionario
+            self.matriz_prueba.append(matriz_diccionario)
 
         messagebox.showinfo("Éxito", "Vectores asignados.")
         print("Matriz de entrenamiento:")
         print(self.matriz_entrenamiento)
         print("Matriz de prueba:")
         print(self.matriz_prueba)
+
+    def clasificar_pruebas(self):
+        if self.matriz_entrenamiento is None or self.matriz_prueba is None:
+            messagebox.showerror("Error","Favor de llenar las matrices de entrenamiento y prueba")
+            return
+        self.clasificador= Clasificador(self.matriz_entrenamiento,self.matriz_prueba,self.root)
     def headers_por_default(self):
         headers = [f"Atributo {chr(97 + i)}" for i in range(len(self.dataframe.columns))]
         self.dataframe.columns = headers
