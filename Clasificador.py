@@ -6,9 +6,9 @@ class Clasificador():
         self.matriz_entrenamiento = matriz_entrenamiento
         self.matriz_prueba = matriz_prueba
         self.root = root
-        self.mostrar_ui()
+        self.create_widgets()
     
-    def mostrar_ui(self):
+    def create_widgets(self):
         # Crear ventana secundaria
         self.ventana = tk.Toplevel(self.root)
         self.ventana.title("Configuración del Clasificador")
@@ -28,12 +28,7 @@ class Clasificador():
         
         # Combobox para tipo de clasificación
         ttk.Label(self.ventana, text="Tipo de Clasificación").pack(anchor="w", padx=10)
-        self.clasification_comboBox = ttk.Combobox(
-            self.ventana, 
-            state="readonly", 
-            values=["Mínima Distancia", "KNN"]
-        )
-        self.clasification_comboBox.bind("<<ComboboxSelected>>", self.on_clasification_change)
+        self.clasification_comboBox = ttk.Combobox(self.ventana, state="readonly", values=["Mínima Distancia", "KNN"])
         self.clasification_comboBox.pack(pady=10, padx=10)
         
         # Combobox para tipo de distancia
@@ -46,34 +41,30 @@ class Clasificador():
         self.typeDistance_comboBox.pack(pady=10, padx=10)
         
         # Botón para aplicar clasificación
-        self.button_clasificar = ttk.Button(
-            self.ventana, 
-            text="Aplicar Clasificación", 
-            command=self.clasificar
-        )
+        self.button_clasificar = ttk.Button(self.ventana,text="Aplicar Clasificación",command=self.clasificar)
         self.button_clasificar.pack(pady=10)
-        
-        # Botón para cerrar ventana
-        button_cerrar = ttk.Button(self.ventana, text="Cerrar", command=self.ventana.destroy)
-        button_cerrar.pack(pady=10)
-        
-        # Entrada para cantidad de vecinos (oculta inicialmente)
+        self.label_Knn=ttk.Label(self.ventana, text="Cantidad de Vecinos (K)").pack(anchor="w", padx=10)
         self.textBox_KnnCantity = ttk.Entry(self.ventana, width=10)
     
-    def on_clasification_change(self, event):
-        # Mostrar o esconder la entrada de cantidad de vecinos
-        selected = self.clasification_comboBox.get()
-        if selected == "KNN":
-            ttk.Label(self.ventana, text="Cantidad de Vecinos (K)").pack(anchor="w", padx=10)
-            self.textBox_KnnCantity.pack(pady=5, padx=10)
-        else:
-            self.textBox_KnnCantity.pack_forget()
-    
     def clasificar(self):
-        # Función de clasificación (por implementar)
         print("Aplicando clasificación...")
-        print(f"Tipo de clasificación: {self.clasification_comboBox.get()}")
-        print(f"Tipo de distancia: {self.typeDistance_comboBox.get()}")
+        tipo_clasificacion= self.clasification_comboBox.get()
+        self.tipo_distancia=self.typeDistance_comboBox.get()
+        if tipo_clasificacion == "KNN":
+            self.clasificar_Knn()
+        else:
+            self.clasificar_minima_distancia()
         if self.clasification_comboBox.get() == "KNN":
-            k = self.textBox_KnnCantity.get()
-            print(f"Cantidad de vecinos (K): {k}")
+            self.k = self.textBox_KnnCantity.get()
+            print(f"Cantidad de vecinos (K): {self.k}")
+    def clasificar_Knn(self):
+        print(f"Knn con distancia {self.tipo_distancia} y vecinos {self.k}")
+        pass
+    def clasificar_minima_distancia(self):
+        print(f"minimaDistancia con distancia {self.tipo_distancia}")
+        pass
+    def calcular_distancia_euclidiana(self,muestra1, muestras):
+        pass
+    def calcular_distancia_manhattan(self,muestra1, muestra2):
+        pass
+

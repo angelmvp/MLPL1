@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
 from Clasificador import Clasificador 
+import os
 class App:
     def __init__(self, root):
         self.root = root
@@ -55,7 +56,6 @@ class App:
         # donde se mostraran los atributos
         self.frame_operaciones = ttk.Frame(self.frame_izquierda)
         self.frame_operaciones.pack(side="top", fill="both", expand=True)
-
         # donde se mostrara toda la data
         self.frame_data = ttk.Frame(self.root)
         self.frame_data.pack(pady=5, padx=20, fill="x")
@@ -68,7 +68,7 @@ class App:
             self.label_archivo.config(text="No se ha cargado nada")
 
     def apply_separation(self):
-        separador = self.textBox_separador.get()
+        separador = ','
         if not separador:
             messagebox.showwarning("Error", "Ingresa un separador.")
             return
@@ -86,23 +86,28 @@ class App:
             messagebox.showerror("Error", "Error al realizar las operpaciones")
 
     def update_info(self,df):
+        tipos_datos={}
         for widget in self.frame_data.winfo_children():
             widget.destroy()
 
         ttk.Label(self.frame_data, text=f"Cantidad de Atributos: {len(df.columns)}").pack()
         ttk.Label(self.frame_data, text=f"Cantidad de Patrones: {len(df)}").pack()
-
+        ttk.Label(self.frame_data, text="Tipos de datos de los atributos:").pack(anchor="w")
+        for col, dtype in df.dtypes.items():
+            tipo = self.obtener_tipo_especifico(dtype)
+            tipos_datos[col] = tipo
+            print(tipo)
         estadisticas = self.get_stats(df)
         if estadisticas:
             ttk.Label(self.frame_data, text="Estadísticas de Atributos Cuantitativos:").pack(anchor="w")
             for col, stats in estadisticas.items():
-                ttk.Label(self.frame_data, text=f"  {col} : {stats}").pack(anchor="w")
+                ttk.Label(self.frame_data, text=f"  {col}({tipos_datos[col]}) : {stats}").pack(anchor="w")
 
         valores_cualitativos = self.obtener_valores_cualitativos(df)
         if valores_cualitativos:
             ttk.Label(self.frame_data, text="Valores De los Atributos Cualitativos:").pack(anchor="w")
             for col, valores in valores_cualitativos.items():
-                ttk.Label(self.frame_data, text=f"  {col}: {', '.join(map(str, valores))}").pack(anchor="w")
+                ttk.Label(self.frame_data, text=f"  {col}  ({tipos_datos[col]}): {', '.join(map(str, valores))}").pack(anchor="w")
         if self.vectores_generados is not None:
             if self.text_vectores:
                 self.text_vectores.destroy()
@@ -122,7 +127,7 @@ class App:
             checkbox.pack(anchor="w")
             self.checkboxes[col] = var
 
-        ttk.Button(self.frame_operaciones, text="Generar Vectores Verticales", command=self.generar_vectores_verticales).pack(pady=10)
+        ttk.Button(self.frame_operaciones, text="Generar Vectores", command=self.generar_vectores_verticales).pack(pady=10)
         # ttk.Button(self.frame_operaciones, text="Generar Vectores Horizontales", command=self.generar_vectores_horizontales).pack(pady=10)
 
         ttk.Label(self.frame_operaciones, text="Inicio de Muestra:").pack(pady=2)
@@ -136,8 +141,7 @@ class App:
         self.button_asignar_nombres = ttk.Button(self.frame_operaciones, text="Asignar Nombre a Atributos", command=self.mostrar_panel_asignar_nombres)
         self.button_asignar_nombres.pack(pady=2)
         ##Boton s pa aplicar matrices entrenamiento
-        ttk.Button(
-            self.frame_operaciones, text="Añadir a Vector a Matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
+        ttk.Button(self.frame_operaciones, text="Añadir a Vector a Matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
         ).pack(pady=3)
     
         ttk.Button(
@@ -203,9 +207,9 @@ class App:
             if orientacion == "horizontal":
                 self.texto = self.df_filtrado[seleccionados].T.to_string(index=True, header=True)
             else:
-                self.texto = self.df_filtrado[seleccionados].to_string(index=False, header=True)
+                self.texto = self.df_filtrado[seleccionados].to_string(index=True, header=True)
 
-            # Mostrar los vectores generados en el mismo panel
+            # Mostrando los vectores
             if self.text_vectores:
                 self.text_vectores.destroy()
             if self.button_info_vectores:
@@ -260,7 +264,19 @@ class App:
                 "Mean": f"{mean_val:.4f}",
             }
         return stats
-
+    def obtener_tipo_especifico(self, dtype):
+        if pd.api.types.is_integer_dtype(dtype):
+            return "int"
+        elif pd.api.types.is_float_dtype(dtype):
+            return "float"
+        elif pd.api.types.is_string_dtype(dtype):
+            return "string"
+        elif pd.api.types.is_bool_dtype(dtype):
+            return "boolean"
+        elif pd.api.types.is_object_dtype(dtype):
+            return "object"
+        else:
+            return str(dtype)
     def obtener_valores_cualitativos(self,df):
         valores_cualitativos = {}
         columnas_cualitativas = df.select_dtypes(exclude="number").columns
@@ -271,7 +287,7 @@ class App:
         return valores_cualitativos
     
 
-    def asignar_dataframe_a_matriz(self, opcion):       
+    def asignar_dataframe_a_matriz(self, opcion: int):       
         matriz_diccionario=None
         if self.vectores_generados is not None:
             matriz_diccionario = self.vectores_generados.T.to_dict(orient="index")
@@ -300,4 +316,9 @@ class App:
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
+    archivo = "150Iris.txt"
+    if os.path.exists(archivo):
+        print("existe")
+    app.archivo=archivo
+    app.apply_separation()
     root.mainloop()
