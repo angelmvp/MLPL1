@@ -13,10 +13,10 @@ class App:
         self.dataframe = None
         self.checkboxes = {}
         self.df_filtrado=None
-        self.matriz_entrenamiento = []
-        self.matriz_prueba = []
+        self.matriz_entrenamiento = None
+        self.matriz_prueba = None
         self.text_vectores=None
-        self.button_info_vectores=None
+        #self.button_info_vectores=None
         self.vectores_generados=None
         self.set_styles()
         self.create_widgets()
@@ -111,8 +111,6 @@ class App:
         if self.vectores_generados is not None:
             if self.text_vectores:
                 self.text_vectores.destroy()
-            if self.button_info_vectores:
-                self.button_info_vectores.destroy()
             self.text_vectores = tk.Text(self.frame_data, width=80, height=10)
             self.text_vectores.insert(tk.END, self.texto)
             self.text_vectores.pack(pady=10, padx=10)
@@ -138,14 +136,14 @@ class App:
         self.entry_cantidad_muestras = ttk.Entry(self.frame_operaciones, width=10)
         self.entry_cantidad_muestras.pack(pady=2)
         ## Botón para asignar nombres a los atributos
-        self.button_asignar_nombres = ttk.Button(self.frame_operaciones, text="Asignar Nombre a Atributos", command=self.mostrar_panel_asignar_nombres)
+        self.button_asignar_nombres = ttk.Button(self.frame_operaciones, text="Asignar Nombre a los Atributos", command=self.mostrar_panel_asignar_nombres)
         self.button_asignar_nombres.pack(pady=2)
         ##Boton s pa aplicar matrices entrenamiento
-        ttk.Button(self.frame_operaciones, text="Añadir a Vector a Matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
+        ttk.Button(self.frame_operaciones, text="Añadir a Vector a matriz de Entrenamiento", command=lambda: self.asignar_dataframe_a_matriz(1)
         ).pack(pady=3)
     
         ttk.Button(
-            self.frame_operaciones, text="Añadir a Vector a Matriz de Prueba",  command=lambda: self.asignar_dataframe_a_matriz(2)
+            self.frame_operaciones, text="Añadir Vector a matrz de Prueba",  command=lambda: self.asignar_dataframe_a_matriz(2)
         ).pack(pady=3)
         ttk.Button(
             self.frame_operaciones,text="Clasificar pruebas",command=self.clasificar_pruebas).pack()
@@ -212,18 +210,16 @@ class App:
             # Mostrando los vectores
             if self.text_vectores:
                 self.text_vectores.destroy()
-            if self.button_info_vectores:
-                self.button_info_vectores.destroy()
 
             self.vectores_generados = self.df_filtrado[seleccionados]
 
             self.text_vectores = tk.Text(self.frame_data, width=80, height=10)
             self.text_vectores.insert(tk.END, self.texto)
             self.text_vectores.pack(pady=10, padx=10)
-            
-            self.button_info_vectores = ttk.Button(self.frame_data, text="Obtener Información de los Vectores",
-                                                command=self.obtener_info_vectores)
-            self.button_info_vectores.pack(pady=10)
+            self.obtener_info_vectores()
+            # self.button_info_vectores = ttk.Button(self.frame_data, text="Obtener Información de los Vectores",
+            #                                     command=self.obtener_info_vectores)
+            #self.button_info_vectores.pack(pady=10)
         except ValueError:
             messagebox.showerror("Error", "Por favor, introduce valores válidos para inicio y cantidad.")
     def obtener_info_vectores(self):
@@ -287,21 +283,24 @@ class App:
         return valores_cualitativos
     
 
-    def asignar_dataframe_a_matriz(self, opcion: int):       
-        matriz_diccionario=None
-        if self.vectores_generados is not None:
-            matriz_diccionario = self.vectores_generados.T.to_dict(orient="index")
+    def asignar_dataframe_a_matriz(self, tipo_matriz:int):
+        if self.vectores_generados is None:
+            messagebox.showwarning("Error", "Primero filtra o selecciona datos.")
+            return
+        if tipo_matriz == 1:
+            if self.matriz_entrenamiento is None:
+                self.matriz_entrenamiento = self.vectores_generados.copy()
+            else:
+                df_temp=self.vectores_generados.copy()
+                self.matriz_entrenamiento = pd.concat([self.matriz_entrenamiento, df_temp], ignore_index=True)
         else:
-            matriz_diccionario = self.dataframe.T.to_dict(orient="index")
-        if opcion == 1:
-            self.matriz_entrenamiento.append(matriz_diccionario)
-        elif opcion == 2:
-            self.matriz_prueba.append(matriz_diccionario)
-
-        messagebox.showinfo("Éxito", "Vectores asignados.")
-        print("Matriz de entrenamiento:")
+            if self.matriz_prueba is None:
+                self.matriz_prueba=self.vectores_generados.copy()
+            else:
+                df_temp=self.vectores_generados.copy()
+                self.matriz_prueba = pd.concat([self.matriz_prueba, df_temp], ignore_index=True)
+        messagebox.showinfo("Exito","Vectores añadidos")
         print(self.matriz_entrenamiento)
-        print("Matriz de prueba:")
         print(self.matriz_prueba)
 
     def clasificar_pruebas(self):
@@ -316,7 +315,7 @@ class App:
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
-    archivo = "150Iris.txt"
+    archivo = "15Iris.txt"
     if os.path.exists(archivo):
         print("existe")
     app.archivo=archivo
