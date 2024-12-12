@@ -309,15 +309,16 @@ class App:
             return
         self.clasificador= Clasificador(self.matriz_entrenamiento,self.matriz_prueba,self.root)
     def headers_por_default(self):
-        headers = [f"Atributo {chr(97 + i)}" for i in range(len(self.dataframe.columns))]
+        headers = [f"Atributo {chr(97 + i)}" for i in range(len(self.dataframe.columns) - 1)]
+        headers.append("Clase")
         self.dataframe.columns = headers
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
-    archivo = "15Iris.txt"
-    if os.path.exists(archivo):
-        print("existe")
-    app.archivo=archivo
-    app.apply_separation()
+    # archivo = "15Iris.txt"
+    # if os.path.exists(archivo):
+    #     print("existe")
+    # app.archivo=archivo
+    # app.apply_separation()
     root.mainloop()
