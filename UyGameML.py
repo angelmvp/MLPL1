@@ -146,6 +146,9 @@ class App:
             self.frame_operaciones, text="Añadir Vector a matrz de Prueba",  command=lambda: self.asignar_dataframe_a_matriz(2)
         ).pack(pady=3)
         ttk.Button(
+            self.frame_operaciones, text="Limpiar MAtriz de Prueba",  command=self.limpiarMatrizPrueba
+        ).pack(pady=3)
+        ttk.Button(
             self.frame_operaciones,text="Clasificar pruebas",command=self.clasificar_pruebas).pack()
     def mostrar_panel_asignar_nombres(self):
         if self.dataframe is None:
@@ -282,7 +285,8 @@ class App:
             valores_cualitativos[col] = df[col].unique()
         return valores_cualitativos
     
-
+    def limpiarMatrizPrueba(self):
+        self.matriz_prueba=None
     def asignar_dataframe_a_matriz(self, tipo_matriz:int):
         if self.vectores_generados is None:
             messagebox.showwarning("Error", "Primero filtra o selecciona datos.")

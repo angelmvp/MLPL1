@@ -100,7 +100,7 @@ class Clasificador:
                 distancia = self.calcular_distancia(muestra_prueba[atributos_prueba], promedios[atributos_prueba])
                 # print(f"distancia: {distancia} a clase {clase}")
                 distancias.append((distancia, clase))
-            print(distancias)
+            # print(distancias)
             clase_predicha = self.obtener_clase_mas_cercana(1,distancias)
             resultados.append((muestra_prueba.to_dict(), clase_predicha))
 
